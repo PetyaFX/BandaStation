@@ -109,8 +109,8 @@
 	if(!sm_turf)
 		stack_trace("Supermatter [sm] failed to spawn tesla, cant get current turf.")
 		return FALSE
-	var/obj/energy_ball/created_tesla = new(sm_turf)
-	created_tesla.energy = 200 //Gets us about 9 balls
+	//var/obj/energy_ball/created_tesla = new(sm_turf)
+	//created_tesla.energy = 200 //Gets us about 9 balls // Tesla Rework: energy is assigned during tesla construction
 	return TRUE
 
 /// Mail the shuttle off to buy milk.
