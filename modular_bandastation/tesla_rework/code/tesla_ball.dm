@@ -1,19 +1,25 @@
-#define TESLA_DEFAULT_ENERGY (695.304 MEGA JOULES)
-#define TESLA_MINI_ENERGY (347.652 MEGA JOULES) // Has a weird scaling thing so this is a lie for now (doesn't generate power anyways).
+#define TESLA_DEFAULT_ENERGY (1500 MEGA JOULES)
+#define TESLA_MINI_ENERGY (200 MEGA JOULES)
+
+#define TESLA_PASSIVE_DECAY_RATIO 0.04
+#define TESLA_ZAP_POWER_RATIO 0.1
+#define TESLA_MIN_ENERGY (100 MEGA JOULES)
+#define TESLA_EMITTER_HIT_ENERGY (40 MEGA JOULES)
+
 //Zap constants, speeds up targeting
 #define BIKE (COIL + 1)
 #define COIL (ROD + 1)
 #define ROD (RIDE + 1)
-#define RIDE (LIVING + 1)
+#define RIDE (BLOB + 1)
+#define BLOB (LIVING + 1)
 #define LIVING (MACHINERY + 1)
-#define MACHINERY (BLOB + 1)
-#define BLOB (STRUCTURE + 1)
+#define MACHINERY (STRUCTURE + 1)
 #define STRUCTURE (1)
 
-/// The Tesla engine
-/obj/energy_ball
-	name = "energy ball"
-	desc = "An energy ball."
+// The Tesla engine based on energy_ball.dm
+/obj/tesla_ball
+	name = "тесла шар"
+	desc = "Шар энергии, по поверхности которого пробегают небольшие разряды от термоядерных реакций, протекающих в шаре. Unlimited power!"
 	icon = 'icons/obj/machines/engine/energy_ball.dmi'
 	icon_state = "energy_ball"
 	anchored = TRUE
@@ -28,72 +34,177 @@
 	pixel_y = -ICON_SIZE_Y
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF | SHUTTLE_CRUSH_PROOF
 	flags_1 = SUPERMATTER_IGNORES_1
+	light_color = "#5e5edd"
 
-	var/energy
+	var/energy // Joules
 	var/target
 	var/list/orbiting_balls = list()
 	var/miniball = FALSE
-	var/produced_power
-	var/energy_to_raise = 32
-	var/energy_to_lower = -20
-	var/list/shocked_things = list()
 
-/obj/energy_ball/Initialize(mapload, starting_energy = 50, is_miniball = FALSE)
+	var/list/shocked_things = list()
+	var/hit_heal
+
+	var/temp = 0
+	var/total_moles = 0
+	var/plasma_moles = 0
+
+	var/list/move_sounds
+
+/obj/tesla_ball/Initialize(mapload, starting_energy = TESLA_DEFAULT_ENERGY, is_miniball = FALSE)
 	. = ..()
 
 	energy = starting_energy
 	miniball = is_miniball
-	START_PROCESSING(SSobj, src)
 
 	if (!is_miniball)
-		set_light(10, 7, "#5e5edd")
+		set_light(10, 7, light_color)
 
 		var/turf/spawned_turf = get_turf(src)
-		message_admins("A tesla has been created at [ADMIN_VERBOSEJMP(spawned_turf)].")
+		message_admins("Reworked tesla has been created at [ADMIN_VERBOSEJMP(spawned_turf)].")
 		investigate_log("was created at [AREACOORD(spawned_turf)].", INVESTIGATE_ENGINE)
 
-/obj/energy_ball/Destroy()
-	if(orbiting && istype(orbiting.parent, /obj/energy_ball))
-		var/obj/energy_ball/parent_energy_ball = orbiting.parent
-		parent_energy_ball.orbiting_balls -= src
+		move_sounds = list(
+		'modular_bandastation/tesla_rework/sound/tesla_move_1.ogg',
+		'modular_bandastation/tesla_rework/sound/tesla_move_2.ogg',
+		'modular_bandastation/tesla_rework/sound/tesla_move_3.ogg'
+		)
+
+	START_PROCESSING(SSobj, src)
+
+	RegisterSignal(src, COMSIG_ATOM_PRE_BULLET_ACT, PROC_REF(check_hit))
+
+/obj/tesla_ball/Destroy()
+	if(orbiting && istype(orbiting.parent, /obj/tesla_ball))
+		var/obj/tesla_ball/parent_tesla_ball = orbiting.parent
+		parent_tesla_ball.orbiting_balls -= src
 
 	QDEL_LIST(orbiting_balls)
 	STOP_PROCESSING(SSobj, src)
 
 	return ..()
 
-/obj/energy_ball/process()
+/obj/tesla_ball/process()
 	if(orbiting)
 		energy = 0 // ensure we dont have miniballs of miniballs
-	else
-		handle_energy()
+		return
 
-		move(4 + orbiting_balls.len * 1.5)
+	// GAS PROCESSING
+	//
+	process_atmos()
+	var/temp_phase_1_clamped = min(temp, 10000) // everything below 10000K
+	var/temp_phase_2_over = max(0, temp - 10000) // everything above 10000K
 
-		playsound(src.loc, 'sound/effects/magic/lightningbolt.ogg', 100, TRUE, extrarange = 30)
+	// 1. Calcualte zap power ratio (ZPR)
+	// +0.05 up until 10000K, after +0.5 for each 1000K
+	var/zpr_growth_1 = temp_phase_1_clamped * 0.000005
+	var/zpr_growth_2 = temp_phase_2_over * 0.0005
+	var/zap_ratio = TESLA_ZAP_POWER_RATIO + zpr_growth_1 + zpr_growth_2
+	zap_ratio *= plasma_moles * 0.0001
 
-		pixel_x = 0
-		pixel_y = 0
-		shocked_things.Cut(1, shocked_things.len / 1.3)
-		var/list/shocking_info = list()
-		tesla_zap(source = src, zap_range = 3, power = TESLA_DEFAULT_ENERGY, shocked_targets = shocking_info)
+	// 2. Calculate passive decay ratio (PDR)
+    // growth only after 10000K, +0.01 for each 1000K
+	var/pdr_growth = temp_phase_2_over * 0.00001
+	var/decay_ratio = TESLA_PASSIVE_DECAY_RATIO + pdr_growth
+	var/passive_decay_amount = energy * decay_ratio
 
-		pixel_x = -ICON_SIZE_X
-		pixel_y = -ICON_SIZE_Y
-		for (var/ball in orbiting_balls)
-			var/range = rand(1, clamp(orbiting_balls.len, 2, 3))
-			var/list/temp_shock = list()
-			//We zap off the main ball instead of ourselves to make things looks proper
-			tesla_zap(source = src, zap_range = range, power = TESLA_MINI_ENERGY / 7 * range, shocked_targets = temp_shock)
-			shocking_info += temp_shock
-		shocked_things += shocking_info
+	// 3. Healing coefficent calculated based on how much plasma is on loc turf and its temperature. 0.03 for each 100K above 275K
+	var/temp_steps = temp / 100
+	var/temp_bonus_joules = temp_steps * 0.03
+	// reduce below 275K, if temp > 250K = normal
+	var/temp_multiplier = clamp((temp / 275), 0.85, 1.0)
+	temp_multiplier *= 1.0 + (temp_bonus_joules / TESLA_EMITTER_HIT_ENERGY)
+	hit_heal = TESLA_EMITTER_HIT_ENERGY * temp_multiplier * (plasma_moles * 0.1)
+	//
+    // END GAS PROCESSING
 
-/obj/energy_ball/examine(mob/user)
+	// PASSIVE DECAY
+	energy = max(0, energy - passive_decay_amount)
+
+	// Actual zap power
+	var/current_zap_power = energy * zap_ratio
+
+	// Charge visual indicator, mini balls spawn with each 200 MJ because we need some charge visualization
+	handle_energy()
+
+	move(4 + orbiting_balls.len * 1.5)
+	playsound(src.loc, pick(move_sounds), 100, TRUE, extrarange = 10, pressure_affected = FALSE)
+
+	pixel_x = 0
+	pixel_y = 0
+	shocked_things.Cut(1, shocked_things.len / 1.3)
+	var/list/shocking_info = list()
+
+	tesla_zap(source = src, zap_range = 3, power = current_zap_power, shocked_targets = shocking_info)
+	playsound(src.loc, 'sound/effects/magic/lightningbolt.ogg', 120, TRUE, extrarange = 30, pressure_affected = FALSE)
+
+    // ACTIVE DECAY
+	energy = max(0, energy - current_zap_power)
+
+	pixel_x = -ICON_SIZE_X
+	pixel_y = -ICON_SIZE_Y
+
+	for (var/ball in orbiting_balls)
+		var/range = rand(1, clamp(orbiting_balls.len, 2, 3))
+		var/list/temp_shock = list()
+		//We zap off the main ball instead of ourselves to make things looks proper
+		var/mini_zap_power = (energy / 2) / 7 * range
+		tesla_zap(source = src, zap_range = range, power = mini_zap_power, shocked_targets = temp_shock)
+		shocking_info += temp_shock
+	shocked_things += shocking_info
+
+/obj/tesla_ball/proc/disperse_event()
+	visible_message(span_warning("[src] вспыхивает с жутким треском и растворяется, ионизируя воздух вокруг!"))
+	playsound(src, 'modular_bandastation/tesla_rework/sound/tesla_destroy.ogg', 165, TRUE, extrarange = 50)
+	qdel(src)
+
+/obj/tesla_ball/proc/check_hit(datum/source, obj/projectile/projectile) // similar to sm proc hit implementation
+	SIGNAL_HANDLER
+
+	var/turf/local_turf = loc
+	if(!istype(local_turf))
+		return NONE
+
+	// safety check
+	if (!projectile || QDELETED(projectile))
+		return COMPONENT_BULLET_BLOCKED
+
+	if (!istype(projectile.firer, /obj/machinery/power/emitter))
+		investigate_log("[src] has been hit by [projectile] fired by [key_name(projectile.firer)]", INVESTIGATE_ENGINE)
+		qdel(projectile)
+		return COMPONENT_BULLET_BLOCKED
+
+	// adding energy
+	var/energy_gain = hit_heal
+	energy += energy_gain
+
+	visible_message(span_notice("[src] потрескивает от попадания!"))
+
+	qdel(projectile)
+	return COMPONENT_BULLET_BLOCKED
+
+/obj/tesla_ball/proc/process_atmos()
+	var/turf/local_turf = loc
+	if (!istype(local_turf))
+		return 1
+	if (isclosedturf(local_turf))
+		return 0.1
+
+	var/datum/gas_mixture/env = local_turf.return_air()
+	if (!env)
+		return 1
+
+	total_moles = env.total_moles()
+	temp = env.return_temperature()
+
+	if (env.has_gas(/datum/gas/plasma))
+		plasma_moles = env.gases[/datum/gas/plasma][MOLES]
+
+/obj/tesla_ball/examine(mob/user)
 	. = ..()
-	if(orbiting_balls.len)
-		. += "There are [orbiting_balls.len] mini-balls orbiting it."
+	var/count = orbiting_balls.len
+	. += "Вокруг него вращается [count] [declent_ru(count, "мини шар", "мини шара", "мини шаров")]"
 
-/obj/energy_ball/proc/move(move_amount)
+/obj/tesla_ball/proc/move(move_amount)
 	var/list/dirs = GLOB.alldirs.Copy()
 	if(shocked_things.len)
 		for (var/i in 1 to 30)
@@ -110,7 +221,7 @@
 			for (var/mob/living/carbon/mob_to_dust in loc)
 				dust_mobs(mob_to_dust)
 
-/obj/energy_ball/proc/can_move(turf/to_move)
+/obj/tesla_ball/proc/can_move(turf/to_move)
 	if (!to_move)
 		return FALSE
 
@@ -121,25 +232,27 @@
 
 	return TRUE
 
-/obj/energy_ball/proc/handle_energy()
-	if(energy >= energy_to_raise)
-		energy_to_lower = energy_to_raise - 20
-		energy_to_raise = energy_to_raise * 1.25
+/obj/tesla_ball/proc/handle_energy()
+	if (energy <= TESLA_MIN_ENERGY)
+		disperse_event()
 
-		playsound(src.loc, 'sound/effects/magic/lightning_chargeup.ogg', 100, TRUE, extrarange = 30)
-		addtimer(CALLBACK(src, PROC_REF(new_mini_ball)), 10 SECONDS)
-	else if(energy < energy_to_lower && orbiting_balls.len)
-		energy_to_raise = energy_to_raise / 1.25
-		energy_to_lower = (energy_to_raise / 1.25) - 20
+	var/target_miniball_count = round(energy / TESLA_MINI_ENERGY)
 
+	var/current_count = orbiting_balls.len
+
+	if (current_count < target_miniball_count)
+		playsound(src.loc, 'sound/effects/magic/lightning_chargeup.ogg', 100, TRUE, extrarange = 30, pressure_affected = FALSE)
+		addtimer(CALLBACK(src, PROC_REF(new_mini_ball)), 2 SECONDS)
+
+	else if (current_count > target_miniball_count)
 		var/Orchiectomy_target = pick(orbiting_balls)
 		qdel(Orchiectomy_target)
 
-/obj/energy_ball/proc/new_mini_ball()
+/obj/tesla_ball/proc/new_mini_ball()
 	if(!loc)
 		return
 
-	var/obj/energy_ball/miniball = new /obj/energy_ball(
+	var/obj/tesla_ball/miniball = new /obj/tesla_ball(
 		loc,
 		/* starting_energy = */ 0,
 		/* is_miniball = */ TRUE
@@ -152,40 +265,50 @@
 	orbitsize -= (orbitsize / ICON_SIZE_ALL) * (ICON_SIZE_ALL * 0.25)
 	miniball.orbit(src, orbitsize, pick(FALSE, TRUE), rand(10, 25), pick(3, 4, 5, 6, 36))
 
-/obj/energy_ball/Bump(atom/A)
+/obj/tesla_ball/Bump(atom/A)
 	dust_mobs(A)
 
-/obj/energy_ball/Bumped(atom/movable/AM)
+/obj/tesla_ball/Bumped(atom/movable/AM)
 	dust_mobs(AM)
 
-/obj/energy_ball/attack_tk(mob/user)
+/obj/tesla_ball/attack_tk(mob/user)
 	if(!iscarbon(user))
 		return
+
+	var/mob/living/L = user
 	var/mob/living/carbon/jedi = user
-	to_chat(jedi, span_userdanger("That was a shockingly dumb idea."))
-	var/obj/item/organ/brain/rip_u = locate(/obj/item/organ/brain) in jedi.organs
-	jedi.ghostize(jedi)
-	if(rip_u)
-		qdel(rip_u)
-	jedi.investigate_log("had [jedi.p_their()] brain dusted by touching [src] with telekinesis.", INVESTIGATE_DEATHS)
-	jedi.death()
+	to_chat(jedi, span_userdanger("Это была шокирующе идиотская идея!"))
+
+	ADD_TRAIT(user, TRAIT_BEING_SHOCKED, WAS_SHOCKED)
+	addtimer(TRAIT_CALLBACK_REMOVE(user, TRAIT_BEING_SHOCKED, WAS_SHOCKED), 1 SECONDS)
+
+	var/power = energy * 0.1 // That's gonna hurt
+	var/shock_damage = min(round(power / 600), 90) + rand(-5, 5)
+	L.electrocute_act(shock_damage, src, 1, SHOCK_TESLA | SHOCK_NOSTUN | SHOCK_NOGLOVES)
+
+	if(issilicon(user))
+		user.emp_act(EMP_LIGHT)
+
+	playsound(src, 'sound/effects/magic/lightningbolt.ogg', 80, TRUE)
+	flash_color(user, "#99ccff", 3)
+
 	return COMPONENT_CANCEL_ATTACK_CHAIN
 
-/obj/energy_ball/orbit(obj/energy_ball/target)
+/obj/tesla_ball/orbit(obj/tesla_ball/target)
 	if (istype(target))
 		target.orbiting_balls += src
 	. = ..()
 
-/obj/energy_ball/stop_orbit()
-	if (orbiting && istype(orbiting.parent, /obj/energy_ball))
-		var/obj/energy_ball/orbitingball = orbiting.parent
+/obj/tesla_ball/stop_orbit()
+	if (orbiting && istype(orbiting.parent, /obj/tesla_ball))
+		var/obj/tesla_ball/orbitingball = orbiting.parent
 		orbitingball.orbiting_balls -= src
 	. = ..()
 	if (!QDELETED(src))
 		qdel(src)
 
 
-/obj/energy_ball/proc/dust_mobs(atom/A)
+/obj/tesla_ball/proc/dust_mobs(atom/A)
 	if(isliving(A))
 		var/mob/living/living = A
 		if(living.incorporeal_move || HAS_TRAIT(living, TRAIT_GODMODE))
@@ -199,7 +322,7 @@
 	C.investigate_log("has been dusted by an energy ball.", INVESTIGATE_DEATHS)
 	C.dust()
 
-/proc/tesla_zap(atom/source, zap_range = 3, power, cutoff = 4e5, zap_flags = ZAP_DEFAULT_FLAGS, list/shocked_targets = list())
+/proc/tesla_reworked_zap(atom/source, zap_range = 3, power, cutoff = 4e5, zap_flags = ZAP_TESLA_FLAGS, list/shocked_targets = list())
 	if(QDELETED(source))
 		return
 	if(!(zap_flags & ZAP_ALLOW_DUPLICATES))
@@ -374,3 +497,9 @@
 
 #undef TESLA_DEFAULT_ENERGY
 #undef TESLA_MINI_ENERGY
+
+#undef TESLA_PASSIVE_DECAY_RATIO
+#undef TESLA_ZAP_POWER_RATIO
+#undef TESLA_MIN_ENERGY
+#undef TESLA_EMITTER_HIT_ENERGY
+
