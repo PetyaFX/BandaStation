@@ -1,5 +1,4 @@
 #include "_teslarework.dm"
-
 #include "code/tesla_ball.dm"
 // BEGIN_INTERNALS
 // END_INTERNALS
@@ -9,6 +8,4 @@
 // BEGIN_PREFERENCES
 // END_PREFERENCES
 // BEGIN_INCLUDE
-#include "_teslarework.dm"
-#include "code\tesla_ball.dm"
 // END_INCLUDE

@@ -134,7 +134,7 @@
 	shocked_things.Cut(1, shocked_things.len / 1.3)
 	var/list/shocking_info = list()
 
-	tesla_zap(source = src, zap_range = 3, power = current_zap_power, shocked_targets = shocking_info)
+	tesla_reworked_zap(source = src, zap_range = 3, power = current_zap_power, shocked_targets = shocking_info)
 	playsound(src.loc, 'sound/effects/magic/lightningbolt.ogg', 120, TRUE, extrarange = 30, pressure_affected = FALSE)
 
 	// ACTIVE DECAY
@@ -148,7 +148,7 @@
 		var/list/temp_shock = list()
 		//We zap off the main ball instead of ourselves to make things looks proper
 		var/mini_zap_power = (energy / 2) / 7 * range
-		tesla_zap(source = src, zap_range = range, power = mini_zap_power, shocked_targets = temp_shock)
+		tesla_reworked_zap(source = src, zap_range = range, power = mini_zap_power, shocked_targets = temp_shock)
 		shocking_info += temp_shock
 	shocked_things += shocking_info
 
@@ -480,11 +480,11 @@
 
 	if(prob(20))//I know I know
 		var/list/shocked_copy = shocked_targets.Copy()
-		tesla_zap(source = closest_atom, zap_range = next_range, power = power * 0.5, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_copy)
-		tesla_zap(source = closest_atom, zap_range = next_range, power = power * 0.5, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_targets)
+		tesla_reworked_zap(source = closest_atom, zap_range = next_range, power = power * 0.5, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_copy)
+		tesla_reworked_zap(source = closest_atom, zap_range = next_range, power = power * 0.5, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_targets)
 		shocked_targets += shocked_copy
 	else
-		tesla_zap(source = closest_atom, zap_range = next_range, power = power, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_targets)
+		tesla_reworked_zap(source = closest_atom, zap_range = next_range, power = power, cutoff = cutoff, zap_flags = zap_flags, shocked_targets = shocked_targets)
 
 #undef BIKE
 #undef COIL
