@@ -102,7 +102,7 @@
 	zap_ratio *= plasma_moles * 0.0001
 
 	// 2. Calculate passive decay ratio (PDR)
-    // growth only after 10000K, +0.01 for each 1000K
+	// growth only after 10000K, +0.01 for each 1000K
 	var/pdr_growth = temp_phase_2_over * 0.00001
 	var/decay_ratio = TESLA_PASSIVE_DECAY_RATIO + pdr_growth
 	var/passive_decay_amount = energy * decay_ratio
@@ -115,7 +115,7 @@
 	temp_multiplier *= 1.0 + (temp_bonus_joules / TESLA_EMITTER_HIT_ENERGY)
 	hit_heal = TESLA_EMITTER_HIT_ENERGY * temp_multiplier * (plasma_moles * 0.1)
 	//
-    // END GAS PROCESSING
+	// END GAS PROCESSING
 
 	// PASSIVE DECAY
 	energy = max(0, energy - passive_decay_amount)
@@ -137,7 +137,7 @@
 	tesla_zap(source = src, zap_range = 3, power = current_zap_power, shocked_targets = shocking_info)
 	playsound(src.loc, 'sound/effects/magic/lightningbolt.ogg', 120, TRUE, extrarange = 30, pressure_affected = FALSE)
 
-    // ACTIVE DECAY
+	// ACTIVE DECAY
 	energy = max(0, energy - current_zap_power)
 
 	pixel_x = -ICON_SIZE_X
