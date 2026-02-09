@@ -213,12 +213,23 @@ SUBSYSTEM_DEF(ticker)
 	if(GLOB.station_was_nuked)
 		return TRUE
 	if(GLOB.revolution_handler?.result == REVOLUTION_VICTORY)
-		return TRUE
+		return FALSE // SS220 BandaStation EDIT - No roundend for Revs win
 	return FALSE
+
+/// Gets a list of players with their readied state so we can post it as a log
+/datum/controller/subsystem/ticker/proc/get_player_ready_states()
+	var/list/player_states = list()
+	for(var/mob/dead/new_player/player as anything in GLOB.new_player_list)
+		player_states[player.ckey] = player.ready
+	return player_states
 
 /datum/controller/subsystem/ticker/proc/setup()
 	to_chat(world, span_boldannounce("Starting game..."))
 	var/init_start = world.timeofday
+
+	var/list/players_and_readiness = get_player_ready_states()
+	log_game("Players and Readiness: [json_encode(players_and_readiness)]", players_and_readiness)
+
 	CHECK_TICK
 	//Configure mode and assign player to antagonists
 	var/can_continue = FALSE
@@ -292,7 +303,7 @@ SUBSYSTEM_DEF(ticker)
 	// Spawn traitors and stuff
 	for(var/datum/dynamic_ruleset/roundstart/ruleset in SSdynamic.queued_rulesets)
 		ruleset.execute()
-		SSdynamic.queued_rulesets -= ruleset
+		SSdynamic.unqueue_ruleset(ruleset)
 		SSdynamic.executed_rulesets += ruleset
 	// Queue roundstart intercept report
 	if(!CONFIG_GET(flag/no_intercept_report))
@@ -313,7 +324,7 @@ SUBSYSTEM_DEF(ticker)
 		var/arguments = list()
 		if(GLOB.revdata.originmastercommit)
 			to_set += "commit_hash = :commit_hash"
-			arguments["commit_hash"] = GLOB.revdata.originmastercommit
+			arguments["commit_hash"] = GLOB.revdata.GetDatabaseCommitSha()
 		if(to_set.len)
 			arguments["round_id"] = GLOB.round_id
 			var/datum/db_query/query_round_game_mode = SSdbcore.NewQuery(

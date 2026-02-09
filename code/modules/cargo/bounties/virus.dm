@@ -13,8 +13,11 @@
 	description = "Нанотрейзен заинтересовано в вирусе, имеющем характеристику: [stat_name] с уровнем [stat_value]. Центральное Командование хорошо заплатит за такой вирус."
 	reward += rand(0, 4) * CARGO_CRATE_VALUE
 
+/datum/bounty/virus/print_required()
+	return "At least 1u"
+
 /datum/bounty/virus/can_claim()
-	return ..() && shipped
+	return shipped
 
 /datum/bounty/virus/applies_to(obj/export)
 	if(shipped)
@@ -61,4 +64,3 @@
 
 /datum/bounty/virus/transmit/accepts_virus(datum/disease/advance/virus)
 	return virus.totalTransmittable() == stat_value
-

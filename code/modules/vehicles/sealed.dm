@@ -41,7 +41,7 @@
 	if(istype(A, /obj/machinery/door))
 		var/obj/machinery/door/conditionalwall = A
 		for(var/mob/occupant as anything in return_controllers_with_flag(access_provider_flags))
-			if(conditionalwall.try_safety_unlock(occupant))
+			if(conditionalwall.try_safety_unlock(occupant) || !conditionalwall.can_open_with_hands)
 				return
 			conditionalwall.bumpopen(occupant)
 
@@ -56,7 +56,7 @@
 
 
 /obj/vehicle/sealed/proc/mob_try_enter(mob/rider)
-	if(!istype(rider))
+	if(!istype(rider) || !isliving(rider))
 		return FALSE
 	var/enter_delay = get_enter_delay(rider)
 	if (enter_delay == 0)

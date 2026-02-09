@@ -1,7 +1,10 @@
 /datum/brain_trauma/special/obsessed
 	name = "Психотическая шизофрения"
 	desc = "У пациента есть подтип бредового расстройства, он становится иррационально привязанным к кому-то."
-	scan_desc = "психотический шизофренический бред"
+	scan_desc = "психотические шизофренические бредовые идеи"
+	symptoms = "Проявляет навязчивое поведение по отношению к конкретному человеку, \
+		включая частые пристальные взгляды, навязчивые мысли и непреодолимое желание находиться рядом с ним. \
+		Эта одержимость может приводить к социальной изоляции, тревожности и нарушению повседневной деятельности."
 	gain_text = "If you see this message, make a github issue report. The trauma initialized wrong."
 	lose_text = span_warning("Голоса в вашей голове замолкают..")
 	can_gain = TRUE
@@ -41,9 +44,9 @@
 	antagonist.greet()
 	log_game("[key_name(antagonist)] has developed an obsession with [key_name(obsession)].")
 	RegisterSignal(owner, COMSIG_CARBON_HELPED, PROC_REF(on_hug))
-	ADD_TRAIT(owner, TRAIT_DESENSITIZED, REF(src))
+	owner.apply_status_effect(/datum/status_effect/desensitized, REF(src), DESENSITIZED_THRESHOLD)
 
-/datum/brain_trauma/special/obsessed/on_life(seconds_per_tick, times_fired)
+/datum/brain_trauma/special/obsessed/on_life(seconds_per_tick)
 	if(!obsession || obsession.stat == DEAD)
 		viewing = FALSE//important, makes sure you no longer stutter when happy if you murdered them while viewing
 		return
@@ -79,7 +82,7 @@
 	if(obsession)
 		log_game("[key_name(owner)] is no longer obsessed with [key_name(obsession)].")
 		UnregisterSignal(obsession, COMSIG_MOB_EYECONTACT)
-	REMOVE_TRAIT(owner, TRAIT_DESENSITIZED, REF(src))
+	owner.remove_status_effect(/datum/status_effect/desensitized, REF(src))
 
 // // BANDASTATION REMOVAL START - Remove Obsessed speech debuff
 // /datum/brain_trauma/special/obsessed/handle_speech(datum/source, list/speech_args)
