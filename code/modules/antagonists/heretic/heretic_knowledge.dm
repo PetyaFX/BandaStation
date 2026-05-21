@@ -55,8 +55,8 @@
 /datum/heretic_knowledge/proc/pre_research(mob/user, datum/antagonist/heretic/our_heretic)
 	// consider moving this check to a type instead
 	if(is_final_knowledge && !our_heretic.unlimited_blades)
-		var/choice = tgui_alert(user, "THIS WILL DISABLE BLADE BREAKING, Are you ready to research this? The blade cap will also be removed.", "Get Final Spell?", list("Yes", "No"))
-		if(choice != "Yes")
+		var/choice = tgui_alert(user, "ЭТО ОТКЛЮЧИТ ВОЗМОЖНОСТЬ РАЗБИТЬ ВАШ КЛИНОК. Вы готовы изучить это? Ограничение на количества клинков будет убрано.", "Изучить финальное заклинание?", list("Да", "Нет"))
+		if(choice != "Да")
 			return FALSE
 	return TRUE
 
@@ -292,7 +292,9 @@
 		our_heretic.heretic_shops[HERETIC_KNOWLEDGE_DRAFT],
 	)
 	SEND_SIGNAL(src, COMSIG_HERETIC_SHOP_SETUP)
-
+	if(our_heretic.give_objectives)
+		our_heretic.forge_primary_objectives()
+		our_heretic.owner.announce_objectives()
 
 /datum/heretic_knowledge/limited_amount/starting/on_gain(mob/user, datum/antagonist/heretic/our_heretic)
 	RegisterSignals(user, list(COMSIG_HERETIC_MANSUS_GRASP_ATTACK, COMSIG_LIONHUNTER_ON_HIT), PROC_REF(on_mansus_grasp))
@@ -473,7 +475,7 @@
  * A subtype of knowledge that generates random ritual components.
  */
 /datum/heretic_knowledge/knowledge_ritual
-	name = "Ritual of Knowledge"
+	name = "Ритуал познания"
 	desc = "Случайно создаваемый ритуал трансмутации, который вознаграждается очками знаний и может быть выполнен только один раз."
 	gain_text = "Все может стать ключом к разгадке секретов, скрытых за Вратами. Я должен быть осторожным и мудрым."
 	abstract_type = /datum/heretic_knowledge/knowledge_ritual
@@ -553,7 +555,7 @@
 	to_chat(user, span_boldnotice("[name] завершено!"))
 	to_chat(user, span_hypnophrase(span_big("[pick_list(HERETIC_INFLUENCE_FILE, "drain_message")]")))
 	desc += " (Завершен!)"
-	log_heretic_knowledge("[key_name(user)] completed a [name] at [gameTimestamp()].")
+	log_heretic_knowledge("[key_name(user)] completed a [name] at [round_timestamp()].")
 	user.add_mob_memory(/datum/memory/heretic_knowledge_ritual)
 	SEND_SIGNAL(our_heretic, COMSIG_HERETIC_PASSIVE_UPGRADE_FINAL)
 	return TRUE
@@ -584,7 +586,7 @@
 		var/list/cost = our_heretic.researched_knowledge[knowledge][HKT_COST]
 		total_points += cost
 
-	log_heretic_knowledge("[key_name(user)] gained knowledge of their final ritual at [gameTimestamp()]. \
+	log_heretic_knowledge("[key_name(user)] gained knowledge of their final ritual at [round_timestamp()]. \
 		They have [length(our_heretic.researched_knowledge)] knowledge nodes researched, totalling [total_points] points \
 		and have sacrificed [our_heretic.total_sacrifices] people ([our_heretic.high_value_sacrifices] of which were high value)")
 
@@ -634,7 +636,7 @@
 		human_user.physiology.burn_mod *= 0.5
 
 	SSblackbox.record_feedback("tally", "heretic_ascended", 1, heretic_datum.heretic_path.route)
-	log_heretic_knowledge("[key_name(user)] completed their final ritual at [gameTimestamp()].")
+	log_heretic_knowledge("[key_name(user)] completed their final ritual at [round_timestamp()].")
 	notify_ghosts(
 		"[user.real_name] завершил ритуал вознесения!",
 		source = user,
@@ -648,7 +650,7 @@
 	)
 
 	if(EMERGENCY_IDLE_OR_RECALLED)
-		SSshuttle.call_evac_shuttle("Critical reality rupture detected on supranatural casuality long-range scanners. Mass crew casualty and possible station destruction determined to be beyond acceptable probability. Priority evacuation shuttle dispatched.")
+		SSshuttle.call_evac_shuttle("Сканерами дальнего действия зафиксирован критический разрыв в реальности, вызванный потусторонними силами. Вероятность массовых потерь экипажа и уничтожения станции превышает допустимые рассчётные вероятности. Запущен приоритетный эвакуационный шаттл.")
 	SSshuttle.emergency_no_recall = TRUE
 
 	if(!isnull(ascension_achievement))
