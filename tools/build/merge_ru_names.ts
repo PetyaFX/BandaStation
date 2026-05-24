@@ -76,7 +76,7 @@ function parseArgs(argv: string[]): { fragmentsDir: string; output: string } {
     } else if (arg === '--output' && argv[i + 1]) {
       rawOutput = argv[++i]!;
     } else {
-      console.error(`Unknown argument: ${arg}`);
+      console.error(`Error: Unknown argument: ${arg}`);
       process.exit(2);
     }
   }

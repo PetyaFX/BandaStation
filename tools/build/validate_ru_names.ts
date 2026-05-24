@@ -4,7 +4,8 @@
  * Rules:
  *   - Valid TOML syntax
  *   - Exactly one root table per file
- *   - All six grammatical case fields present and non-empty
+ *   - "nominative" field present and non-empty
+ *   - Other case fields must not be empty if present
  *   - No unknown fields (catches typos like "nominatve")
  *   - No duplicate keys across files
  */
@@ -18,7 +19,7 @@ import {
   resolveCliPath,
 } from './lib/ru_names';
 
-const REQUIRED_CASE_FIELDS = [
+const ALL_CASE_FIELDS = [
   'nominative',
   'genitive',
   'dative',
@@ -27,7 +28,7 @@ const REQUIRED_CASE_FIELDS = [
   'prepositional',
 ] as const;
 
-const ALL_KNOWN_FIELDS = new Set<string>([...REQUIRED_CASE_FIELDS, 'gender']);
+const ALL_KNOWN_FIELDS = new Set<string>([...ALL_CASE_FIELDS, 'gender']);
 
 interface FragmentResult {
   relativePath: string;
@@ -42,36 +43,46 @@ function validateFragment(
   const relativePath = relative(fragmentsRoot, fragmentPath)
     .split(/[/\\]/)
     .join('/');
-  const errors: string[] = [];
+  const parsed = parseTomlFragment(readFileSync(fragmentPath, 'utf-8'));
 
-  const result = parseTomlFragment(readFileSync(fragmentPath, 'utf-8'));
-
-  if (!result.ok) {
-    errors.push(`parse error: ${result.error}`);
-    return { relativePath, englishKey: null, errors };
+  if (!parsed.ok) {
+    return {
+      relativePath,
+      englishKey: null,
+      errors: [`Error: parse error: ${parsed.error}`],
+    };
   }
 
-  const { rootKey: englishKey, fields } = result.data;
+  const { rootKey: englishKey, fields } = parsed.data;
+  const errors: string[] = [];
 
   if (Object.keys(fields).length === 0) {
-    errors.push('empty document — expected exactly one root table with fields');
+    errors.push(
+      'Error: empty document - expected exactly one root table with fields',
+    );
     return { relativePath, englishKey, errors };
   }
 
   for (const key of Object.keys(fields)) {
     if (!ALL_KNOWN_FIELDS.has(key)) {
       errors.push(
-        `unknown field "${key}" — allowed fields: ${[...ALL_KNOWN_FIELDS].sort().join(', ')}`,
+        `Error: unknown field "${key}" - allowed fields: ${[...ALL_KNOWN_FIELDS].sort().join(', ')}`,
       );
     }
   }
 
-  for (const caseField of REQUIRED_CASE_FIELDS) {
+  const nominative = fields['nominative'];
+  if (nominative === undefined) {
+    errors.push('Error: missing required field "nominative"');
+  } else if (!nominative.trim()) {
+    errors.push('Error: field "nominative" must not be empty');
+  }
+
+  for (const caseField of ALL_CASE_FIELDS) {
+    if (caseField === 'nominative') continue;
     const value = fields[caseField];
-    if (value === undefined) {
-      errors.push(`missing required field "${caseField}"`);
-    } else if (!value.trim()) {
-      errors.push(`field "${caseField}" must not be empty`);
+    if (typeof value === 'string' && !value.trim()) {
+      errors.push(`Error: field "${caseField}" must not be empty`);
     }
   }
 
@@ -84,9 +95,9 @@ function parseArgs(argv: string[]): { fragmentsDir: string } {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === '--fragments-dir' && argv[i + 1]) {
-      rawFragmentsDir = argv[++i]!;
+      rawFragmentsDir = argv[++i];
     } else {
-      console.error(`Unknown argument: ${arg}`);
+      console.error(`Error: Unknown argument: ${arg}`);
       process.exit(2);
     }
   }
@@ -100,13 +111,13 @@ function main(): number {
   const { fragmentsDir } = parseArgs(process.argv.slice(2));
 
   if (!existsSync(fragmentsDir) || !statSync(fragmentsDir).isDirectory()) {
-    console.error(`Fragments directory not found: ${fragmentsDir}`);
+    console.error(`Error: Fragments directory not found: ${fragmentsDir}`);
     return 1;
   }
 
   const discovered = discoverFragments(fragmentsDir);
   if (discovered.length === 0) {
-    console.error(`No *.toml fragments found under ${fragmentsDir}`);
+    console.error(`Error: No *.toml fragments found under ${fragmentsDir}`);
     return 1;
   }
 
@@ -114,25 +125,22 @@ function main(): number {
     validateFragment(fragmentPath, fragmentsDir),
   );
 
-  // Check for duplicate keys across files in a second pass - each file
-  // is parsed once above, so we just iterate the already computed results here
-  const seenKeys = new Map<string, string>(); // englishKey -> first relativePath
+  const seenKeys = new Map<string, string>();
   for (const result of results) {
     if (result.englishKey === null) continue;
-    const firstOccurrence = seenKeys.get(result.englishKey);
-    if (firstOccurrence !== undefined) {
+    const firstPath = seenKeys.get(result.englishKey);
+    if (firstPath !== undefined) {
       result.errors.push(
-        `duplicate english key "${result.englishKey}" — first defined in ${firstOccurrence}`,
+        `Error: duplicate key "${result.englishKey}" - first defined in ${firstPath}`,
       );
-    } else {
-      seenKeys.set(result.englishKey, result.relativePath);
+      continue;
     }
+    seenKeys.set(result.englishKey, result.relativePath);
   }
 
   const filesWithErrors = results.filter((result) => result.errors.length > 0);
-
   if (filesWithErrors.length === 0) {
-    console.log(`✓  All ${discovered.length} fragments are valid.`);
+    console.log(`Success: All ${discovered.length} fragments are valid.`);
     return 0;
   }
 
@@ -144,9 +152,9 @@ function main(): number {
     `Validation failed: ${totalErrors} error(s) in ${filesWithErrors.length} of ${discovered.length} file(s)\n`,
   );
   for (const { relativePath, errors } of filesWithErrors) {
-    console.error(`  ${relativePath}:`);
+    console.error(`${relativePath}:`);
     for (const error of errors) {
-      console.error(`    ✗  ${error}`);
+      console.error(`  ${error}`);
     }
   }
 
