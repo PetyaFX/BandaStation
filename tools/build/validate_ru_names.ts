@@ -7,15 +7,14 @@
  *   - All six grammatical case fields present and non-empty
  *   - No unknown fields (catches typos like "nominatve")
  *   - No duplicate keys across files
- *   - Filename matches the TOML key (spaces as underscores)
  */
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { basename, relative } from 'node:path';
-import { parse } from '@iarna/toml';
+import { relative } from 'node:path';
 import {
   DEFAULT_FRAGMENTS_DIR,
   discoverFragments,
+  parseTomlFragment,
   resolveCliPath,
 } from './lib/ru_names';
 
@@ -45,48 +44,18 @@ function validateFragment(
     .join('/');
   const errors: string[] = [];
 
-  let parsed: unknown;
-  try {
-    parsed = parse(readFileSync(fragmentPath, 'utf-8'));
-  } catch (exc) {
-    errors.push(`TOML parse error: ${exc}`);
+  const result = parseTomlFragment(readFileSync(fragmentPath, 'utf-8'));
+
+  if (!result.ok) {
+    errors.push(`parse error: ${result.error}`);
     return { relativePath, englishKey: null, errors };
   }
 
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    errors.push('expected a TOML table at top level');
-    return { relativePath, englishKey: null, errors };
-  }
+  const { rootKey: englishKey, fields } = result.data;
 
-  const doc = parsed as Record<string, unknown>;
-  const rootKeys = Object.keys(doc);
-
-  if (rootKeys.length === 0) {
-    errors.push('empty document — expected exactly one root table');
-    return { relativePath, englishKey: null, errors };
-  }
-
-  if (rootKeys.length !== 1) {
-    errors.push(
-      `expected exactly one root table, found ${rootKeys.length}: ${JSON.stringify(rootKeys.sort())}`,
-    );
-    return { relativePath, englishKey: null, errors };
-  }
-
-  const englishKey = rootKeys[0]!;
-  const body = doc[englishKey];
-
-  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
-    errors.push('root table value must be a map of string key/value pairs');
+  if (Object.keys(fields).length === 0) {
+    errors.push('empty document — expected exactly one root table with fields');
     return { relativePath, englishKey, errors };
-  }
-
-  const fields = body as Record<string, unknown>;
-
-  for (const [key, value] of Object.entries(fields)) {
-    if (typeof value !== 'string') {
-      errors.push(`field "${key}" must be a string, got ${typeof value}`);
-    }
   }
 
   for (const key of Object.keys(fields)) {
@@ -101,17 +70,9 @@ function validateFragment(
     const value = fields[caseField];
     if (value === undefined) {
       errors.push(`missing required field "${caseField}"`);
-    } else if (typeof value === 'string' && !value.trim()) {
+    } else if (!value.trim()) {
       errors.push(`field "${caseField}" must not be empty`);
     }
-  }
-
-  // Filename must match the TOML key
-  const stem = basename(fragmentPath, '.toml');
-  if (stem !== englishKey && stem.replace(/_/g, ' ') !== englishKey) {
-    errors.push(
-      `filename "${basename(fragmentPath)}" does not match TOML key "${englishKey}"`,
-    );
   }
 
   return { relativePath, englishKey, errors };
