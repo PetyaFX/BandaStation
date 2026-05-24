@@ -1,0 +1,30 @@
+# GitHub action to autorender nanomaps outside the game
+# This kills off the awful verb we have that takes a full 50 seconds and hangs the whole server
+# The file names and locations are VERY important here
+# DO NOT EDIT THIS UNLESS YOU KNOW WHAT YOU ARE DOING
+# -aa
+name: "Render Nanomaps (Local Only)"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate_maps:
+    name: "Generate NanoMaps"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Render Maps
+        run: |
+          chmod +x tools/nanomap_renderer/nanomap-renderer
+          chmod +x tools/nanomap_renderer/nanomap-renderer-invoker.sh
+          ./tools/nanomap_renderer/nanomap-renderer-invoker.sh
+
+      - name: Upload nanomaps
+        uses: actions/upload-artifact@v4
+        with:
+          name: nanomaps-output
+          path: data/nanomaps/*.png
