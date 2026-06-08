@@ -4902,7 +4902,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer4,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "bjv" = (
 /turf/closed/wall/r_wall,
 /area/station/security/holding_cell)
@@ -6596,7 +6596,7 @@
 	dir = 1
 	},
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "bDQ" = (
 /obj/structure/ore_box,
 /turf/open/floor/iron,
@@ -15855,7 +15855,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /obj/machinery/light/small/directional/north,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "dNv" = (
 /obj/effect/turf_decal/caution/stand_clear,
 /obj/effect/decal/cleanable/dirt,
@@ -19980,7 +19980,7 @@
 /obj/structure/sign/departments/telecomms/alt/directional/north,
 /obj/effect/turf_decal/tile/neutral/fourcorners,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "eRB" = (
 /obj/effect/turf_decal/stripes/line,
 /obj/structure/cable,
@@ -20200,7 +20200,7 @@
 	},
 /obj/effect/turf_decal/tile/neutral/fourcorners,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "eUy" = (
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer4,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
@@ -22913,7 +22913,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer4,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "fCp" = (
 /obj/structure/chair/stool/directional/north,
 /turf/open/floor/plating,
@@ -32486,7 +32486,7 @@
 /obj/structure/window/reinforced/spawner/directional/east,
 /obj/structure/window/reinforced/spawner/directional/west,
 /turf/open/floor/plating,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "hPk" = (
 /obj/machinery/light/directional/west,
 /obj/structure/disposalpipe/segment,
@@ -35189,7 +35189,7 @@
 	},
 /obj/item/stack/sheet/mineral/plasma/five,
 /turf/open/floor/catwalk_floor/iron_dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "izA" = (
 /obj/machinery/power/apc/auto_name/directional/south,
 /obj/structure/cable,
@@ -37405,7 +37405,7 @@
 	},
 /obj/machinery/power/port_gen/pacman/pre_loaded,
 /turf/open/floor/catwalk_floor/iron_dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "jbG" = (
 /obj/effect/landmark/carpspawn,
 /turf/open/space/openspace,
@@ -41394,7 +41394,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /obj/machinery/light/small/directional/east,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "kbG" = (
 /obj/structure/cable,
 /obj/machinery/light/directional/south,
@@ -55342,7 +55342,7 @@
 /obj/structure/table,
 /obj/item/multitool,
 /turf/open/floor/catwalk_floor/iron_dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "nuS" = (
 /obj/machinery/vending/cigarette,
 /turf/open/floor/wood/parquet,
@@ -61020,7 +61020,7 @@
 /obj/machinery/atmospherics/components/unary/vent_pump/on/layer4,
 /obj/structure/plasticflaps/kitchen,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "oND" = (
 /obj/structure/cable/multilayer/multiz,
 /obj/structure/window/reinforced/spawner/directional/north,
@@ -74742,7 +74742,7 @@
 /obj/structure/window/reinforced/spawner/directional/east,
 /obj/structure/window/reinforced/spawner/directional/south,
 /turf/open/floor/plating,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "sjk" = (
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer4,
@@ -80702,7 +80702,7 @@
 /obj/item/wrench,
 /obj/item/screwdriver,
 /turf/open/floor/catwalk_floor/iron_dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "tIt" = (
 /obj/machinery/power/apc/auto_name/directional/north,
 /obj/structure/cable,
@@ -81080,7 +81080,7 @@
 /obj/structure/cable,
 /obj/effect/turf_decal/stripes/box,
 /turf/open/floor/iron/dark/smooth_large,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "tML" = (
 /obj/effect/turf_decal/trimline/blue/filled/corner,
 /turf/open/floor/iron,
@@ -89533,7 +89533,7 @@
 	dir = 1
 	},
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "vTD" = (
 /obj/machinery/atmospherics/pipe/smart/simple/scrubbers/visible,
 /turf/open/floor/iron/dark,
@@ -90483,7 +90483,7 @@
 /obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /obj/machinery/atmospherics/pipe/smart/manifold4w/supply/hidden/layer4,
 /turf/open/floor/iron/dark,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "wgM" = (
 /obj/machinery/atmospherics/components/unary/vent_pump/on/layer4{
 	dir = 4
@@ -95377,7 +95377,7 @@
 /obj/effect/mapping_helpers/airlock/access/all/engineering/tcoms,
 /obj/effect/mapping_helpers/airlock/cyclelink_helper,
 /turf/open/floor/iron/dark/telecomms,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "xpd" = (
 /obj/machinery/airalarm/directional/north,
 /obj/machinery/camera/directional/north{
@@ -98359,7 +98359,7 @@
 /area/station/medical/pharmacy)
 "ycr" = (
 /turf/closed/wall,
-/area/station/tcommsat/server)
+/area/station/tcommsat/computer)
 "ycw" = (
 /obj/structure/table/wood,
 /obj/item/stamp/mime{
@@ -98387,7 +98387,6 @@
 /obj/effect/turf_decal/tile/blue/half/contrasted{
 	dir = 1
 	},
-/obj/machinery/atmospherics/pipe/smart/manifold4w/scrubbers/hidden/layer2,
 /turf/open/floor/iron,
 /area/station/hallway/primary/central)
 "ycI" = (
@@ -127032,9 +127031,9 @@ kLw
 idT
 phd
 doz
-phd
-phd
-phd
+jHL
+jHL
+jHL
 doz
 ceC
 doz
@@ -127287,11 +127286,11 @@ bfp
 oQk
 bcx
 cwv
-phd
-phd
-phd
+jHL
+jHL
+jHL
 eRz
-phd
+jHL
 ycr
 ycr
 ycr
@@ -127801,11 +127800,11 @@ ubL
 mnw
 pSO
 dpR
-phd
-phd
-phd
+jHL
+jHL
+jHL
 eUx
-phd
+jHL
 ycr
 ycr
 bjq
@@ -128060,9 +128059,9 @@ qRy
 idT
 phd
 doz
-phd
-phd
-phd
+jHL
+jHL
+jHL
 doz
 ycr
 bjq
