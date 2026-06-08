@@ -95377,7 +95377,7 @@
 /obj/effect/mapping_helpers/airlock/access/all/engineering/tcoms,
 /obj/effect/mapping_helpers/airlock/cyclelink_helper,
 /turf/open/floor/iron/dark/telecomms,
-/area/station/tcommsat/computer)
+/area/station/tcommsat/server)
 "xpd" = (
 /obj/machinery/airalarm/directional/north,
 /obj/machinery/camera/directional/north{
@@ -127286,7 +127286,7 @@ bfp
 oQk
 bcx
 cwv
-jHL
+phd
 jHL
 jHL
 eRz
@@ -127800,7 +127800,7 @@ ubL
 mnw
 pSO
 dpR
-jHL
+phd
 jHL
 jHL
 eUx
