@@ -101,20 +101,20 @@ export const CutterTarget = new Juke.Target({
   },
 });
 
-// BANDASTATION MOD START: merge split ru_names.toml fragments before compiling DM
+// BANDASTATION EDIT START: merge split ru_names.toml fragments before compiling DM
 export const RuNamesMergeTarget = new Juke.Target({
-  inputs: ['tools/translations/ru_names_header.toml', `$modular_bandastation/translations/code/translation_data/ru_names/**/*.toml`],
+  inputs: ['tools/translations/ru_names_header.toml', `$modular_bandastation/translations/public/ru_names/**/*.toml`],
   executes: async () => {
     const python = process.platform === 'win32' ? 'tools/bootstrap/python.bat' : 'tools/bootstrap/python';
     await Juke.exec(python, [
       'tools/translations/merge_ru_names.py',
       'tools/translations/ru_names_header.toml',
-      'modular_bandastation/translations/code/translation_data/ru_names',
-      'modular_bandastation/translations/code/translation_data/ru_names.toml',
+      'modular_bandastation/translations/public/ru_names',
+      'modular_bandastation/translations/public/ru_names.toml',
     ]);
   },
 });
-// BANDASTATION MOD END
+// BANDASTATION EDIT END
 
 export const IconCutterTarget = new Juke.Target({
   parameters: [ForceRecutParameter],
@@ -183,7 +183,7 @@ export const DmTarget = new Juke.Target({
     SkipIconCutter,
   ],
   dependsOn: ({ get }) => [
-    RuNamesMergeTarget, // BANDASTATION MOD: Merge ru_names
+    RuNamesMergeTarget, // BANDASTATION EDIT: Merge ru_names
     get(DefineParameter).includes('ALL_TEMPLATES') && DmMapsIncludeTarget,
     !get(SkipIconCutter) && IconCutterTarget,
   ],
@@ -224,7 +224,7 @@ export const DmTestTarget = new Juke.Target({
     NoWarningParameter,
   ],
   dependsOn: ({ get }) => [
-    RuNamesMergeTarget, // BANDASTATION MOD: Merge ru_names
+    RuNamesMergeTarget, // BANDASTATION EDIT: Merge ru_names
     get(DefineParameter).includes('ALL_MAPS') && DmMapsIncludeTarget,
     IconCutterTarget,
   ],
@@ -268,7 +268,7 @@ export const AutowikiTarget = new Juke.Target({
     NoWarningParameter,
   ],
   dependsOn: ({ get }) => [
-    RuNamesMergeTarget, // BANDASTATION MOD: Merge ru_names
+    RuNamesMergeTarget, // BANDASTATION EDIT: Merge ru_names
     get(DefineParameter).includes('ALL_TEMPLATES') && DmMapsIncludeTarget,
     IconCutterTarget,
   ],
@@ -456,7 +456,7 @@ export const CleanAllTarget = new Juke.Target({
 });
 
 export const TgsTarget = new Juke.Target({
-  dependsOn: [RuNamesMergeTarget, TguiTarget], // BANDASTATION MOD: Merge ru_names
+  dependsOn: [RuNamesMergeTarget, TguiTarget], // BANDASTATION EDIT: Merge ru_names
   executes: async () => {
     Juke.logger.info('Prepending TGS define');
     prependDefines('TGS');
