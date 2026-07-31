@@ -3,19 +3,15 @@ name: Merge Upstream
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   merge-upstream:
     runs-on: ubuntu-latest
 
     steps:
-      - id: create_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.PRIVATE_KEY }}
-
-      - run: echo "GH_TOKEN=${{ steps.create_token.outputs.token }}" >> "$GITHUB_ENV"
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -34,8 +30,8 @@ jobs:
 
       - name: Run the script
         env:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
-          TARGET_REPO: "ss220club/BandaStation"
+          GITHUB_TOKEN: ${{ secrets.MERGE_UPSTREAM_TOKEN || github.token }}
+          TARGET_REPO: ${{ github.repository }}
           TARGET_BRANCH: "master"
           UPSTREAM_REPO: "tgstation/tgstation"
           UPSTREAM_BRANCH: "master"

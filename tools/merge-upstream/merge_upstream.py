@@ -97,7 +97,7 @@ def setup_repo():
     logging.info("Cloning repository: %s", TARGET_REPO)
     run_command(f"git clone https://x-access-token:{GITHUB_TOKEN}@github.com/{TARGET_REPO}.git repo")
     os.chdir("repo")
-    run_command(f"git remote add upstream https://x-access-token:{GITHUB_TOKEN}@github.com/{UPSTREAM_REPO}.git")
+    run_command(f"git remote add upstream https://github.com/{UPSTREAM_REPO}.git")
     logging.info("Git remotes set up: %s", run_command(f"git remote -v"))
 
 
