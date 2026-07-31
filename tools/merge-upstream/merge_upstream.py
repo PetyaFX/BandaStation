@@ -1,10 +1,13 @@
 import enum
+import json
 import logging
 import os
 import re
 import subprocess
 import time
 import typing
+import urllib.error
+import urllib.request
 
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
@@ -16,7 +19,6 @@ from github import Github
 from github.PaginatedList import PaginatedList
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from g4f.client import Client
 
 import changelog_utils
 
@@ -68,6 +70,9 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 # Environment variables
 TRANSLATE_CHANGES = os.getenv("TRANSLATE_CHANGES", "False").lower() in ("true", "yes", "1")
 CHANGELOG_AUTHOR = os.getenv("CHANGELOG_AUTHOR", "")
+TRANSLATE_API_BASE_URL = os.getenv("TRANSLATE_API_BASE_URL", "https://g4f.space/api/gemini")
+TRANSLATE_API_KEY = os.getenv("TRANSLATE_API_KEY", "")
+TRANSLATE_MODEL = os.getenv("TRANSLATE_MODEL", "gemini-2.5-flash")
 
 check_env()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -249,7 +254,7 @@ def process_pull(details: PullDetails, pull: PullRequest):
 
 
 def translate_changelog(changelog: typing.Dict[int, list[Change]]):
-    """Translate changelog using g4f."""
+    """Translate changelog using an OpenAI-compatible chat completion endpoint."""
     logging.info("Translating changelog...")
     if not changelog:
         logging.warning("No changelog entries to translate.")
@@ -267,20 +272,35 @@ def translate_changelog(changelog: typing.Dict[int, list[Change]]):
     with open(script_dir.joinpath("translation_context.txt"), encoding="utf-8") as f:
         context = "\n".join(f.readlines()).strip()
 
-    client = Client()
-    response = client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": context},
-            {"role": "user", "content": text}
-        ],
-        model="gpt-4.1",
-        web_search=False,
+    request = urllib.request.Request(
+        url=f"{TRANSLATE_API_BASE_URL.rstrip('/')}/chat/completions",
+        data=json.dumps({
+            "model": TRANSLATE_MODEL,
+            "messages": [
+                {"role": "system", "content": context},
+                {"role": "user", "content": text}
+            ],
+            "temperature": 0,
+        }).encode(),
+        headers={
+            "Content-Type": "application/json",
+            **({"Authorization": f"Bearer {TRANSLATE_API_KEY}"} if TRANSLATE_API_KEY else {}),
+        },
+        method="POST",
     )
-    translated_text: str | None = response.choices[0].message.content
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            response_json = json.loads(response.read().decode())
+    except urllib.error.HTTPError as e:
+        logging.error("Translation API failed with HTTP %d: %s", e.code, e.read().decode(errors="replace"))
+        raise
+
+    choices = response_json.get("choices") or [{}]
+    translated_text: str | None = choices[0].get("message", {}).get("content")
 
     if not translated_text:
         logging.warning("Changelog translation failed!")
-        logging.debug("Translation API response: %s", response)
+        logging.debug("Translation API response: %s", response_json)
         return
 
     translated_text = sanitize_translation(translated_text)
