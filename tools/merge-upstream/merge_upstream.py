@@ -70,9 +70,9 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 # Environment variables
 TRANSLATE_CHANGES = os.getenv("TRANSLATE_CHANGES", "False").lower() in ("true", "yes", "1")
 CHANGELOG_AUTHOR = os.getenv("CHANGELOG_AUTHOR", "")
-TRANSLATE_API_BASE_URL = os.getenv("TRANSLATE_API_BASE_URL", "https://g4f.space/api/gemini")
+TRANSLATE_API_BASE_URL = os.getenv("TRANSLATE_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
 TRANSLATE_API_KEY = os.getenv("TRANSLATE_API_KEY", "")
-TRANSLATE_MODEL = os.getenv("TRANSLATE_MODEL", "gemini-2.5-flash")
+TRANSLATE_MODEL = os.getenv("TRANSLATE_MODEL", "gemini-3.6-flash")
 
 check_env()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")

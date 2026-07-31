@@ -38,11 +38,13 @@ jobs:
           MERGE_BRANCH: "merge-upstream"
           CHANGELOG_AUTHOR: "tgstation"
           TRANSLATE_CHANGES: "true"
-          TRANSLATE_API_BASE_URL: ${{ vars.TRANSLATE_API_BASE_URL || 'https://g4f.space/api/gemini' }}
+          TRANSLATE_API_BASE_URL: ${{ vars.TRANSLATE_API_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai' }}
           TRANSLATE_API_KEY: ${{ secrets.TRANSLATE_API_KEY }}
-          TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-2.5-flash' }}
+          TRANSLATE_MODEL: ${{ vars.TRANSLATE_MODEL || 'gemini-3.6-flash' }}
           LOG_LEVEL: ${{ runner.debug && 'DEBUG' || 'INFO' }}
         run: |
+          test -n "$GITHUB_TOKEN" || { echo "::error::Set MERGE_UPSTREAM_TOKEN with Contents, Pull requests, and Workflows write permissions"; exit 1; }
+          test -n "$TRANSLATE_API_KEY" || { echo "::error::Set TRANSLATE_API_KEY for the translation provider"; exit 1; }
           git config --global user.email "action@github.com"
           git config --global user.name "Upstream Sync"
           python3 -u merge_upstream.py
