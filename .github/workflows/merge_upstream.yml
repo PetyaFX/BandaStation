@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install PyGithub openai
+          pip install PyGithub g4f
 
       - name: Download the script
         run: |
@@ -42,7 +42,6 @@ jobs:
           MERGE_BRANCH: "merge-upstream"
           CHANGELOG_AUTHOR: "tgstation"
           TRANSLATE_CHANGES: "true"
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LOG_LEVEL: ${{ runner.debug && 'DEBUG' || 'INFO' }}
         run: |
           git config --global user.email "action@github.com"

@@ -16,8 +16,7 @@ from github import Github
 from github.PaginatedList import PaginatedList
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from openai import OpenAI
-from openai.types.chat import ChatCompletion
+from g4f.client import Client
 
 import changelog_utils
 
@@ -58,8 +57,6 @@ def check_env():
         "UPSTREAM_BRANCH",
         "MERGE_BRANCH"
     ]
-    if TRANSLATE_CHANGES:
-        required_vars.append("OPENAI_API_KEY")
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
         logging.error("Missing required environment variables: %s", ", ".join(missing_vars))
@@ -79,7 +76,6 @@ TARGET_BRANCH = os.getenv("TARGET_BRANCH")
 UPSTREAM_REPO = os.getenv("UPSTREAM_REPO")
 UPSTREAM_BRANCH = os.getenv("UPSTREAM_BRANCH")
 MERGE_BRANCH = os.getenv("MERGE_BRANCH")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def run_command(command: str) -> str:
@@ -253,7 +249,7 @@ def process_pull(details: PullDetails, pull: PullRequest):
 
 
 def translate_changelog(changelog: typing.Dict[int, list[Change]]):
-    """Translate changelog using OpenAI API."""
+    """Translate changelog using g4f."""
     logging.info("Translating changelog...")
     if not changelog:
         logging.warning("No changelog entries to translate.")
@@ -271,13 +267,14 @@ def translate_changelog(changelog: typing.Dict[int, list[Change]]):
     with open(script_dir.joinpath("translation_context.txt"), encoding="utf-8") as f:
         context = "\n".join(f.readlines()).strip()
 
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response: ChatCompletion = client.chat.completions.create(
+    client = Client()
+    response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": context},
             {"role": "user", "content": text}
         ],
-        model="gpt-5-mini",
+        model="gpt-4.1",
+        web_search=False,
     )
     translated_text: str | None = response.choices[0].message.content
 
