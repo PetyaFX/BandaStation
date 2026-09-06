@@ -72,6 +72,8 @@
 	icon_state = "whirlpool"
 	layer = ABOVE_OPEN_TURF_LAYER
 
+/turf/open/water/groundwater/whirlpool
+
 /turf/open/water/groundwater/whirlpool/Initialize(mapload)
 	. = ..()
 	AddComponent(/datum/component/chasm, null, mapload)
