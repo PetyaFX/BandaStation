@@ -79,7 +79,7 @@ SUBSYSTEM_DEF(blackbox)
 
 //Recorded on subsystem shutdown
 /datum/controller/subsystem/blackbox/proc/FinalFeedback()
-	record_feedback("tally", "ahelp_stats", GLOB.ahelp_tickets.active_tickets.len, "unresolved")
+	record_feedback("tally", "ahelp_stats", GLOB.ticket_manager.get_open_tickets_count(), "unresolved") // BANDASTATION EDIT: Original: GLOB.ahelp_tickets.active_tickets.len
 	for (var/obj/machinery/telecomms/message_server/messages in GLOB.telecomm_machines)
 		if (messages.pda_msgs.len)
 			record_feedback("tally", "radio_usage", messages.pda_msgs.len, "PDA")

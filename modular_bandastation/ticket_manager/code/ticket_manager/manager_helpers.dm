@@ -169,6 +169,7 @@
 		initiator.current_help_ticket = null
 
 		var/blackbox_action = ticket_closed ? TICKET_AHELP_ACTION_CLOSED : TICKET_AHELP_ACTION_RESOLVED
+		SSblackbox.record_feedback("tally", "ahelp_stats", 1, ticket_closed ? "closed" : "resolved")
 		if(!admin)
 			admin_message = "Тикет #[ticket_id] был автоматически закрыт!"
 			user_message = "Ваш тикет был автоматически закрыт! Вы можете создать новый если вам всё ещё нужна помощь."
@@ -189,6 +190,8 @@
 		deltimer(needed_ticket.ticket_autoclose_timer_id)
 		needed_ticket.ticket_autoclose_timer_id = null
 
+		SSblackbox.record_feedback("tally", "ahelp_stats", -1, needed_ticket.state == TICKET_RESOLVED ? "resolved" : "closed")
+		SSblackbox.record_feedback("tally", "ahelp_stats", 1, "reopened")
 		initiator.current_help_ticket = needed_ticket
 		needed_ticket.closed_at = null
 		user_message = "Ваш тикет #[ticket_id] был снова открыт! Проверьте Тикет Менеджер нажав F1!"
@@ -387,3 +390,12 @@
 	))
 
 	SStgui.update_uis(GLOB.ticket_manager)
+
+/// Returns the number of currently open tickets
+/datum/ticket_manager/proc/get_open_tickets_count()
+	var/open_tickets_count = 0
+	for(var/id, ticket in all_tickets)
+		var/datum/help_ticket/help_ticket = ticket
+		if(help_ticket.state == TICKET_OPEN)
+			open_tickets_count++
+	return open_tickets_count

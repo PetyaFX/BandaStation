@@ -61,7 +61,7 @@
 
 	if(initiator_client.current_help_ticket) //This is a bug
 		stack_trace("Multiple help tickets opened by a single player!")
-		GLOB.ticket_manager.set_ticket_state(initiator_client.current_help_ticket.id, TICKET_CLOSED)
+		GLOB.ticket_manager.set_ticket_state(null, initiator_client.current_help_ticket, TICKET_CLOSED)
 
 	initiator_client.current_help_ticket = src
 	GLOB.ticket_manager.all_tickets[id] = src
