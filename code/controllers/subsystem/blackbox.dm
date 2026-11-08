@@ -16,6 +16,7 @@ SUBSYSTEM_DEF(blackbox)
 							"testmerged_prs" = 2,
 							"dynamic_threat" = 2,
 							"bitrunning_domain_loaded" = 2,
+							"ahelp_stats" = 2, // BANDASTATION EDIT: format changed to nested tally split by ticket type
 						) //associative list of any feedback variables that have had their format changed since creation and their current version, remember to update this
 
 /datum/controller/subsystem/blackbox/Initialize()
@@ -79,7 +80,15 @@ SUBSYSTEM_DEF(blackbox)
 
 //Recorded on subsystem shutdown
 /datum/controller/subsystem/blackbox/proc/FinalFeedback()
-	record_feedback("tally", "ahelp_stats", GLOB.ticket_manager.get_open_tickets_count(), "unresolved") // BANDASTATION EDIT: Original: GLOB.ahelp_tickets.active_tickets.len
+	// BANDASTATION EDIT START: Nested tally ahelps
+	// Stats are recorded as nested tally split by ticket type. Legacy tickets can still be created
+	// via the hidden NoTguiAdminhelp verb, so they count toward "admin" unresolved
+	for(var/ticket_type_id in GLOB.help_ticket_types)
+		var/open_tickets_count = GLOB.ticket_manager.get_open_tickets_count(ticket_type_id)
+		if(ticket_type_id == TICKET_TYPE_ADMIN)
+			open_tickets_count += GLOB.ahelp_tickets.active_tickets.len
+		record_feedback("nested tally", "ahelp_stats", open_tickets_count, list(LOWER_TEXT(ticket_type_id), "unresolved"))
+	// BANDASTATION EDIT END: Nested tally ahelps
 	for (var/obj/machinery/telecomms/message_server/messages in GLOB.telecomm_machines)
 		if (messages.pda_msgs.len)
 			record_feedback("tally", "radio_usage", messages.pda_msgs.len, "PDA")

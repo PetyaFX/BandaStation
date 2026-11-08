@@ -157,6 +157,7 @@
 	var/ticket_id = needed_ticket.id
 	var/ticket_closed = new_state == TICKET_CLOSED
 	var/datum/persistent_client/initiator = needed_ticket.initiator_client
+	var/ticket_stats_type = LOWER_TEXT(needed_ticket.ticket_type_id)
 
 	if(new_state != TICKET_OPEN)
 		deltimer(needed_ticket.ticket_autoclose_timer_id)
@@ -169,7 +170,7 @@
 		initiator.current_help_ticket = null
 
 		var/blackbox_action = ticket_closed ? TICKET_AHELP_ACTION_CLOSED : TICKET_AHELP_ACTION_RESOLVED
-		SSblackbox.record_feedback("tally", "ahelp_stats", 1, ticket_closed ? "closed" : "resolved")
+		SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(ticket_stats_type, ticket_closed ? "closed" : "resolved"))
 		if(!admin)
 			admin_message = "Тикет #[ticket_id] был автоматически закрыт!"
 			user_message = "Ваш тикет был автоматически закрыт! Вы можете создать новый если вам всё ещё нужна помощь."
@@ -190,8 +191,8 @@
 		deltimer(needed_ticket.ticket_autoclose_timer_id)
 		needed_ticket.ticket_autoclose_timer_id = null
 
-		SSblackbox.record_feedback("tally", "ahelp_stats", -1, needed_ticket.state == TICKET_RESOLVED ? "resolved" : "closed")
-		SSblackbox.record_feedback("tally", "ahelp_stats", 1, "reopened")
+		SSblackbox.record_feedback("nested tally", "ahelp_stats", -1, list(ticket_stats_type, needed_ticket.state == TICKET_RESOLVED ? "resolved" : "closed"))
+		SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(ticket_stats_type, "reopened"))
 		initiator.current_help_ticket = needed_ticket
 		needed_ticket.closed_at = null
 		user_message = "Ваш тикет #[ticket_id] был снова открыт! Проверьте Тикет Менеджер нажав F1!"
@@ -391,11 +392,14 @@
 
 	SStgui.update_uis(GLOB.ticket_manager)
 
-/// Returns the number of currently open tickets
-/datum/ticket_manager/proc/get_open_tickets_count()
+/// Returns the number of currently open tickets, optionally filtered by `ticket_type_id`
+/datum/ticket_manager/proc/get_open_tickets_count(ticket_type_id = null)
 	var/open_tickets_count = 0
-	for(var/id, ticket in all_tickets)
-		var/datum/help_ticket/help_ticket = ticket
-		if(help_ticket.state == TICKET_OPEN)
-			open_tickets_count++
+	for(var/key, value in all_tickets)
+		var/datum/help_ticket/help_ticket = value
+		if(help_ticket.state != TICKET_OPEN)
+			continue
+		if(ticket_type_id && help_ticket.ticket_type_id != ticket_type_id)
+			continue
+		open_tickets_count++
 	return open_tickets_count

@@ -454,9 +454,9 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 	GLOB.ahelp_tickets.resolved_tickets -= src
 	switch(state)
 		if(AHELP_CLOSED)
-			SSblackbox.record_feedback("tally", "ahelp_stats", -1, "closed")
+			SSblackbox.record_feedback("nested tally", "ahelp_stats", -1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "closed")) // BANDASTATION EDIT: nested tally split by ticket type
 		if(AHELP_RESOLVED)
-			SSblackbox.record_feedback("tally", "ahelp_stats", -1, "resolved")
+			SSblackbox.record_feedback("nested tally", "ahelp_stats", -1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "resolved")) // BANDASTATION EDIT: nested tally split by ticket type
 	state = AHELP_ACTIVE
 	closed_at = null
 	if(initiator)
@@ -467,7 +467,7 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 	message_admins(msg)
 	log_admin_private(msg)
 	SSblackbox.LogAhelp(id, "Reopened", "Reopened by [usr.key]", usr.ckey)
-	SSblackbox.record_feedback("tally", "ahelp_stats", 1, "reopened")
+	SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "reopened")) // BANDASTATION EDIT: nested tally split by ticket type
 	TicketPanel() //can only be done from here, so refresh it
 
 //private
@@ -491,7 +491,7 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 	GLOB.ahelp_tickets.ListInsert(src)
 	AddInteraction("<font color='red'>Closed by [key_name].</font>", player_message = "<font color='red'>Ticket closed!</font>")
 	if(!silent)
-		SSblackbox.record_feedback("tally", "ahelp_stats", 1, "closed")
+		SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "closed")) // BANDASTATION EDIT: nested tally split by ticket type
 		var/msg = "Ticket [TicketHref("#[id]")] closed by [key_name]."
 		message_admins(msg)
 		SSblackbox.LogAhelp(id, "Closed", "Closed by [usr.key]", null, usr.ckey)
@@ -510,7 +510,7 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 	AddInteraction("<font color='green'>Resolved by [key_name].</font>", player_message = "<font color='green'>Ticket resolved!</font>")
 	to_chat(initiator, span_adminhelp("Your ticket has been resolved by an admin. The Adminhelp verb will be returned to you shortly."), confidential = TRUE)
 	if(!silent)
-		SSblackbox.record_feedback("tally", "ahelp_stats", 1, "resolved")
+		SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "resolved")) // BANDASTATION EDIT: nested tally split by ticket type
 		var/msg = "Ticket [TicketHref("#[id]")] resolved by [key_name]"
 		message_admins(msg)
 		SSblackbox.LogAhelp(id, "Resolved", "Resolved by [usr.key]", null, usr.ckey)
@@ -530,7 +530,7 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 		to_chat(initiator, "<font color='red'><b>Your admin help was rejected.</b> The adminhelp verb has been returned to you so that you may try again.</font>", confidential = TRUE)
 		to_chat(initiator, "Please try to be calm, clear, and descriptive in admin helps, do not assume the admin has seen any related events, and clearly state the names of anybody you are reporting.", confidential = TRUE)
 
-	SSblackbox.record_feedback("tally", "ahelp_stats", 1, "rejected")
+	SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "rejected")) // BANDASTATION EDIT: nested tally split by ticket type
 	var/msg = "Ticket [TicketHref("#[id]")] rejected by [key_name]"
 	message_admins(msg)
 	log_admin_private(msg)
@@ -549,7 +549,7 @@ GLOBAL_DATUM_INIT(ahelp_tickets, /datum/admin_help_tickets, new)
 	if(initiator)
 		to_chat(initiator, msg, confidential = TRUE)
 
-	SSblackbox.record_feedback("tally", "ahelp_stats", 1, "IC")
+	SSblackbox.record_feedback("nested tally", "ahelp_stats", 1, list(LOWER_TEXT(TICKET_TYPE_ADMIN), "IC")) // BANDASTATION EDIT: nested tally split by ticket type
 	msg = "Ticket [TicketHref("#[id]")] marked as IC by [key_name]"
 	message_admins(msg)
 	log_admin_private(msg)

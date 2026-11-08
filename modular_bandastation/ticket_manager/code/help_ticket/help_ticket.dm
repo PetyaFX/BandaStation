@@ -221,7 +221,7 @@
 		return FALSE
 
 	var/type_to_convert_to = type_to_convert_to()
-	if(!type_to_convert_to)
+	if(state != TICKET_OPEN || !type_to_convert_to)
 		to_chat(
 			converter,
 			span_danger("Тикет `[id]` не может быть конвертирован."),
